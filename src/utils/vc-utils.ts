@@ -3,14 +3,16 @@ import { agent } from "./veramo/VeramoSetup";
 import Web3 from "web3";
 import { EthrDID } from "ethr-did";
 import { Resolver } from "did-resolver";
-import { getResolver } from "ethr-did-resolver";
+import { getResolver as ethrDidResolver } from "ethr-did-resolver";
 import "dotenv/config";
 
 import { decodeJwt, JWTPayload } from "jose";
 import { randomUUID } from "crypto";
 
-const rpcUrl = process.env.RPC_URL;
-const didResolver = new Resolver(getResolver({ rpcUrl, name: "rinkeby" }));
+const INFURA_PROJECT_ID = process.env.RPC_URL;
+const didResolver = new Resolver(
+  ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID })
+);
 
 const Ajv = require("ajv");
 const ajv = new Ajv({ allowUnionTypes: true, strict: false });
@@ -196,7 +198,6 @@ export async function issueVC(
           achievement: "Certified Solidity Developer 2",
           courseProvider: "https://blockchain-lab.um.si/",
         },
-        id: randomUUID(),
       },
       save: false,
       proofFormat: "jwt",
@@ -271,6 +272,8 @@ export async function verifyVP(
               // 1. Check if JWT is valid
               const res = await agent.verifyCredential({ credential: vc });
               console.log(res);
+              const decoded: JWTPayload = decodeJwt(vc.proof.jwt);
+              console.log("Decoded", decoded);
               if (!res) return false;
               console.log("Valid JWT proof");
               // 2. Check if VC uses the correct schema
@@ -283,7 +286,6 @@ export async function verifyVP(
               }
               let issuer = JSON.parse(JSON.stringify(vc.issuer));
               // 3. verify if JWT content == VC content
-              const decoded: JWTPayload = decodeJwt(vc.proof.jwt);
 
               if (
                 decoded.sub != vc.credentialSubject.id ||
@@ -372,31 +374,19 @@ export async function verifyVP(
                 console.log(validate.errors);
                 return false;
               }
-              let issuer = JSON.parse(JSON.stringify(vc.issuer));
-              // 3. verify if JWT content == VC content
-              // const decoded: JWTPayload = decodeJwt(vc.proof.jwt);
-
-              // if (
-              //   decoded.sub != vc.credentialSubject.id ||
-              //   decoded.iss != issuer.id ||
-              //   (decoded as any).vc.credentialSubject.accomplishmentType !=
-              //     vc.credentialSubject.accomplishmentType ||
-              //   (decoded as any).vc.credentialSubject.achievement !=
-              //     vc.credentialSubject.achievement
-              // ) {
-              //   console.log("VC content is not the same as JWT");
-              //   return false;
-              // }
+              let issuer = JSON.parse(JSON.stringify(vc.iss));
               console.log("VC content valid");
               // 4. verify if subject == wallet connected to the dApp
-              if (vc.credentialSubject.id?.split(":")[3] != address) {
+              if (vc.sub.split(":")[3] != address) {
                 console.log("VC does not belong to the address");
+                console.log(address, vc.sub.split(":")[3]);
                 return false;
               }
               console.log("Valid subject");
               // 5. verify issuer
-              if (issuer.id !== process.env.VC_ISSUER) {
+              if (issuer !== process.env.VC_ISSUER) {
                 console.log("failed to verify issuer");
+                console.log(issuer, process.env.VC_ISSUER);
                 return false;
               }
               console.log("Issuer valid");

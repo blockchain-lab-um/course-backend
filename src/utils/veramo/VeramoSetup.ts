@@ -23,17 +23,10 @@ import { KeyManager } from "@veramo/key-manager";
 // Custom key management system for RN
 import { KeyManagementSystem, SecretBox } from "@veramo/kms-local";
 
-// Custom message handler
-import { MessageHandler } from "@veramo/message-handler";
-
-// Jwt message handler
-import { JwtMessageHandler } from "@veramo/did-jwt";
-
 // Custom resolvers
 import { DIDResolverPlugin } from "@veramo/did-resolver";
 import { Resolver } from "did-resolver";
 import { getResolver as ethrDidResolver } from "ethr-did-resolver";
-import { getResolver as webDidResolver } from "web-did-resolver";
 
 import {
   CredentialIssuerLD,
@@ -69,7 +62,7 @@ import {
 const DATABASE_FILE = "database.sqlite";
 
 // You will need to get a project ID from infura https://www.infura.io
-const INFURA_PROJECT_ID = "da2069d93bdf491f992fb8cae21ba41b";
+const INFURA_PROJECT_ID = "213be20ed53945018f03b028b68556bb";
 
 // This will be the secret key for the KMS
 const KMS_SECRET_KEY =
@@ -131,7 +124,6 @@ export const agent = createAgent<
     new DIDResolverPlugin({
       resolver: new Resolver({
         ...ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID }),
-        ...webDidResolver(),
       }),
     }),
   ],
