@@ -219,7 +219,7 @@ export async function issueVC(
 
 const resolveDidEthr = async (mmAddr: string, delAddr: string) => {
   console.log("Resolving didEthr", delAddr);
-  const chainNameOrId = "rinkeby";
+  const chainNameOrId = "goerli";
   const ethrDid = new EthrDID({
     identifier: mmAddr as string,
     chainNameOrId,
