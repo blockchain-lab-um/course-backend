@@ -10,9 +10,18 @@ import { decodeJwt, JWTPayload } from "jose";
 import { randomUUID } from "crypto";
 
 const INFURA_PROJECT_ID = process.env.RPC_URL;
-const didResolver = new Resolver(
-  ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID })
-);
+const networks = [
+  {
+    name: "goerli",
+    chainId: 5,
+    rpcUrl: "https://goerli.infura.io/v3/" + INFURA_PROJECT_ID,
+  },
+  {
+    name: "0x05",
+    rpcUrl: "https://goerli.infura.io/v3/" + INFURA_PROJECT_ID,
+  },
+];
+const didResolver = new Resolver(ethrDidResolver({ networks }));
 
 const Ajv = require("ajv");
 const ajv = new Ajv({ allowUnionTypes: true, strict: false });
@@ -441,7 +450,8 @@ export function isIdentifier(identifier: string) {
   }
   if (
     parts.length == 4 &&
-    (parts[2] != "rinkeby" || !Web3.utils.isAddress(parts[3]))
+    !(parts[2] == "goerli" || parts[2] == "0x5" || parts[2] == "0x05") &&
+    Web3.utils.isAddress(parts[3])
   )
     return false;
   if (parts.length == 3 && !Web3.utils.isAddress(parts[2])) {

@@ -50,6 +50,7 @@ import {
 import { createConnection } from "typeorm";
 import {
   CredentialIssuer,
+  CredentialPlugin,
   ICredentialIssuer,
   W3cMessageHandler,
 } from "@veramo/credential-w3c";
@@ -62,7 +63,7 @@ import {
 const DATABASE_FILE = "database.sqlite";
 
 // You will need to get a project ID from infura https://www.infura.io
-const INFURA_PROJECT_ID = "213be20ed53945018f03b028b68556bb";
+const INFURA_PROJECT_ID = "ae403e9efbee4afca0428b30f44bf661";
 
 // This will be the secret key for the KMS
 const KMS_SECRET_KEY =
@@ -78,6 +79,18 @@ const dbConnection = createConnection({
   entities: Entities,
 });
 
+const networks = [
+  {
+    name: "goerli",
+    chainId: 5,
+    rpcUrl: "https://goerli.infura.io/v3/" + INFURA_PROJECT_ID,
+  },
+  {
+    name: "0x05",
+    rpcUrl: "https://goerli.infura.io/v3/" + INFURA_PROJECT_ID,
+  },
+];
+
 export const agent = createAgent<
   IDIDManager &
     IKeyManager &
@@ -89,7 +102,7 @@ export const agent = createAgent<
     IMessageHandler
 >({
   plugins: [
-    new CredentialIssuer(),
+    new CredentialPlugin(),
     new CredentialIssuerEIP712(),
     new DataStore(dbConnection),
     new CredentialIssuerLD({
@@ -113,17 +126,15 @@ export const agent = createAgent<
       providers: {
         "did:ethr": new EthrDIDProvider({
           defaultKms: "local",
-          network: "rinkeby",
-          rpcUrl: "https://rinkeby.infura.io/v3/" + INFURA_PROJECT_ID,
-        }),
-        "did:web": new WebDIDProvider({
-          defaultKms: "local",
+          networks,
         }),
       },
     }),
     new DIDResolverPlugin({
       resolver: new Resolver({
-        ...ethrDidResolver({ infuraProjectId: INFURA_PROJECT_ID }),
+        ...ethrDidResolver({
+          networks,
+        }),
       }),
     }),
   ],
