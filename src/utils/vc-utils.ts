@@ -130,9 +130,8 @@ const schema = {
   required: ["@context", "type", "issuer", "issuanceDate", "credentialSubject"],
   properties: {
     "@context": { type: ["string", "array", "object"] },
-    id: { type: "string", format: "uri" },
     type: { type: ["string", "array"], items: { type: "string" } },
-    issuer: {
+    iss: {
       type: ["string", "object"],
       format: "uri",
       required: ["id"],
@@ -212,7 +211,7 @@ export async function issueVC(
           id: claimerId,
           accomplishmentType: "Developer Certificate",
           learnerName: name,
-          achievement: "Certified Solidity Developer 2",
+          achievement: "Certified Solidity Developer Test",
           courseProvider: "https://blockchain-lab.um.si/",
         },
       },
