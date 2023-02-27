@@ -13,7 +13,8 @@ import "dotenv/config";
 import { decodeJwt, JWTPayload } from "jose";
 import { randomUUID } from "crypto";
 
-const INFURA_PROJECT_ID = process.env.RPC_URL;
+const INFURA_PROJECT_ID = process.env.INFURA_ID;
+const RPC_URL = process.env.RPC_URL;
 const ADDRESS = process.env.ETH_IDENTIFIER;
 const PRIVATE_KEY = process.env.ETH_PRIVATE_KEY;
 const VC_ISSUER = process.env.VC_ISSUER;
@@ -21,11 +22,11 @@ const networks = [
   {
     name: "goerli",
     chainId: 5,
-    rpcUrl: "https://goerli.infura.io/v3/" + INFURA_PROJECT_ID,
+    rpcUrl: RPC_URL,
   },
   {
     name: "0x05",
-    rpcUrl: "https://goerli.infura.io/v3/" + INFURA_PROJECT_ID,
+    rpcUrl: RPC_URL,
   },
 ];
 const didResolver = new Resolver(ethrDidResolver({ networks }));
