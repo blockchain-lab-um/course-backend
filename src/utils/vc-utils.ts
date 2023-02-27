@@ -1,4 +1,8 @@
-import { VerifiableCredential, VerifiablePresentation } from "@veramo/core";
+import {
+  MinimalImportableIdentifier,
+  VerifiableCredential,
+  VerifiablePresentation,
+} from "@veramo/core";
 import { agent } from "./veramo/VeramoSetup";
 import Web3 from "web3";
 import { EthrDID } from "ethr-did";
@@ -10,6 +14,9 @@ import { decodeJwt, JWTPayload } from "jose";
 import { randomUUID } from "crypto";
 
 const INFURA_PROJECT_ID = process.env.RPC_URL;
+const ADDRESS = process.env.ETH_IDENTIFIER;
+const PRIVATE_KEY = process.env.ETH_PRIVATE_KEY;
+const VC_ISSUER = process.env.VC_ISSUER;
 const networks = [
   {
     name: "goerli",
@@ -213,6 +220,21 @@ export async function issueVC(
     });
     return verifiableCredential as VerifiableCredential;
   } else {
+    console.log("Importing new DID");
+    const importId = {
+      did: VC_ISSUER as string,
+      provider: "did:ethr:goerli",
+      keys: [
+        {
+          kms: "local",
+          type: "Secp256k1",
+          privateKeyHex: PRIVATE_KEY as string,
+        },
+      ],
+    } as MinimalImportableIdentifier;
+    console.log("import", importId);
+    const identifier = await agent.didManagerImport(importId);
+    console.log(identifier);
     return "error";
   }
 }
