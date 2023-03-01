@@ -40,8 +40,7 @@ class VCController {
   generateChallenge() {
     return {
       challenge: uuidv4(),
-      domain:
-        "did:ethr:goerli:0x0241abd662da06d0af2f0152a80bc037f65a7f901160cfe1eb35ef3f0c532a2a4d",
+      domain: process.env.VC_ISSUER,
     };
   }
 }
