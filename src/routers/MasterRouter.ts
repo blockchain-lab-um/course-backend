@@ -1,5 +1,5 @@
 import { Router } from "express";
-import VCRouter from "./VCRouter/VCRouter";
+import VCRouter from "./VCRouter/VCRouter.js";
 
 class MasterRouter {
   private _router = Router();
@@ -18,4 +18,6 @@ class MasterRouter {
   }
 }
 
-export = new MasterRouter().router;
+//export = new MasterRouter().router;
+
+export default MasterRouter;

@@ -1,7 +1,7 @@
 import { VerifiablePresentation } from "@veramo/core";
 import { W3CPresentation } from "did-jwt-vc";
-import ErrorHandler from "../models/ErrorHandler";
-import { issueVC, isIdentifier, verifyVP } from "../utils/vc-utils";
+import ErrorHandler from "../models/ErrorHandler.js";
+import { issueVC, isIdentifier, verifyVP } from "../utils/vc-utils.js";
 import { v4 as uuidv4 } from "uuid";
 
 class VCController {
@@ -45,4 +45,4 @@ class VCController {
   }
 }
 
-export = new VCController();
+export default new VCController();

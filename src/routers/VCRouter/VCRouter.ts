@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
-import VCController from "../../controllers/VCController";
+import VCController from "../../controllers/VCController.js";
 
 class VCRouter {
   private _router = Router();
@@ -85,4 +85,4 @@ class VCRouter {
   }
 }
 
-export = new VCRouter().router;
+export default new VCRouter().router;
