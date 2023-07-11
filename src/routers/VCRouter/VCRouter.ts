@@ -35,7 +35,11 @@ class VCRouter {
       "/issue-vc",
       async (req: Request, res: Response, next: NextFunction) => {
         try {
-          console.log("Request body", req.body);
+          console.log(
+            `[${new Date(Date.now()).toUTCString()}]: ${req.body.name} - ${
+              req.body.id
+            }`
+          );
           if (req.body.name && req.body.id) {
             const result = await this._controller.getVC(
               req.body.name,
@@ -54,7 +58,6 @@ class VCRouter {
       "/verify-vp",
       async (req: Request, res: Response, next: NextFunction) => {
         try {
-          //console.log("Request body", req.body);
           if (req.body.vp) {
             const result = await this._controller.verifyVP(
               req.body.vp,

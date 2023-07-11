@@ -5,7 +5,6 @@ import {
 } from "@veramo/core";
 import { agent } from "./veramo/VeramoSetup.js";
 import Web3 from "web3";
-import { EthrDID } from "ethr-did";
 import { Resolver } from "did-resolver";
 import { getResolver as ethrDidResolver } from "ethr-did-resolver";
 import "dotenv/config";
@@ -186,9 +185,7 @@ export async function issueVC(
   let identifier: string = "";
   if (identifiers.length > 0) {
     identifiers.map((id) => {
-      console.log(id.did);
       identifier = id.did;
-      console.log("..................");
     });
 
     //   const did = await agent.didManagerCreate();
@@ -222,7 +219,6 @@ export async function issueVC(
     });
     return verifiableCredential as VerifiableCredential;
   } else {
-    console.log("Importing new DID");
     const importId = {
       did: VC_ISSUER as string,
       provider: "did:ethr:goerli",
@@ -234,27 +230,17 @@ export async function issueVC(
         },
       ],
     } as MinimalImportableIdentifier;
-    console.log("import", importId);
-    const identifier = await agent.didManagerImport(importId);
-    console.log(identifier);
+    await agent.didManagerImport(importId);
     return "error";
   }
 }
 
 const resolveDidEthr = async (mmAddr: string, delAddr: string) => {
-  console.log("Resolving didEthr", delAddr);
-  const chainNameOrId = "goerli";
-  const ethrDid = new EthrDID({
-    identifier: mmAddr as string,
-    chainNameOrId,
-  });
   const didDocument = (await didResolver.resolve(delAddr)).didDocument;
-  console.log("DID:ETHR DID DOCUMENT:", didDocument);
 
   const veriKeys = didDocument?.verificationMethod;
   let retVal = false;
   if (veriKeys != null) {
-    console.log("veri keys", veriKeys);
     veriKeys.map((key) => {
       if (
         key.publicKeyHex?.toString().toUpperCase() ===
@@ -283,42 +269,27 @@ export async function verifyVP(
   challenge: string,
   address: string
 ) {
-  if (domain) console.log("Domain", domain);
-  if (challenge) console.log("Challenge", challenge);
-  console.log("VP", vp);
-
   //Check for EIP712 or JWT VP
-
   try {
     //JWT
     if (vp.proof.type && vp.proof.type == "JwtProof2020") {
-      console.log("VP is type: JWT");
       const res = await agent.verifyPresentation({
         presentation: vp,
         challenge: challenge,
         domain: domain,
       });
       if (res) {
-        console.log("Verifiyng VCs");
         if (vp.verifiableCredential) {
           const unresolved: Array<Promise<boolean>> =
             vp.verifiableCredential?.map(async (vc): Promise<boolean> => {
               vc = vc as VerifiableCredential;
-              console.log("=================VERIFYING VC=================", vc);
-
               // 1. Check if JWT is valid
               const res = await agent.verifyCredential({ credential: vc });
-              console.log(res);
               const decoded: JWTPayload = decodeJwt(vc.proof.jwt);
-              console.log("Decoded", decoded);
               if (!res) return false;
-              console.log("Valid JWT proof");
               // 2. Check if VC uses the correct schema
               const validate = ajv.compile(schema);
-              if (validate(vc)) {
-                console.log("Schema is Valid");
-              } else {
-                console.log(validate.errors);
+              if (!validate(vc)) {
                 return false;
               }
               let issuer = JSON.parse(JSON.stringify(vc.issuer));
@@ -332,22 +303,16 @@ export async function verifyVP(
                 (decoded as any).vc.credentialSubject.achievement !=
                   vc.credentialSubject.achievement
               ) {
-                console.log("VC content is not the same as JWT");
                 return false;
               }
-              console.log("VC content valid");
               // 4. verify if subject == wallet connected to the dApp
               if (vc.credentialSubject.id?.split(":")[3] != address) {
-                console.log("VC does not belong to the address");
                 return false;
               }
-              console.log("Valid subject");
               // 5. verify issuer
               if (issuer.id !== process.env.VC_ISSUER) {
-                console.log("failed to verify issuer");
                 return false;
               }
-              console.log("Issuer valid");
               // 6. verify VP holder
               if (vp.holder != vc.credentialSubject.id) {
                 // 6.1. verify if delegate exists
@@ -357,82 +322,54 @@ export async function verifyVP(
                     vc.credentialSubject.id?.split(":")[3],
                     vp.holder.split(":")[3]
                   ))
-                )
-                  console.log("Valid");
-                else {
-                  console.log("Holder does not have authorization to use VC!");
+                ) {
+                } else {
                   return false;
                 }
               }
-              console.log("Valid VP issuer");
               return true;
             });
           const resolved = await Promise.all(unresolved);
-          console.log(
-            "Finished, VP contains valid VC: ",
-            resolved.includes(true),
-            resolved
-          );
           return resolved.includes(true);
         } else return false;
       } else return res;
     }
     //EIP712
     else if (vp.proof.type && vp.proof.type == "EthereumEip712Signature2021") {
-      console.log("VP is type EIP712");
-
       const res = await agent.verifyPresentationEIP712({
         presentation: vp,
       });
       if (res) {
-        console.log("Verifiyng VCs");
         if (vp.verifiableCredential) {
           const unresolved: Array<Promise<boolean>> =
             vp.verifiableCredential?.map(async (vcJwt): Promise<boolean> => {
               vcJwt = vcJwt as string;
-              console.log(
-                "=================VERIFYING VC=================",
-                vcJwt
-              );
 
               //0. Decode JWT
               const vc = decodeJwt(vcJwt) as VerifiableCredential;
-              console.log("VC: ", vc);
               // 1. Check if JWT is valid
               const res = await agent.verifyCredential({ credential: vcJwt });
-              console.log(res);
               if (!res) return false;
-              console.log("Valid JWT proof");
               // 2. Check if VC uses the correct schema
               const validate = ajv.compile(schemaEIP712);
-              if (validate(vc.vc)) {
-                console.log("Schema is Valid");
-              } else {
-                console.log(validate.errors);
+              if (!validate(vc.vc)) {
                 return false;
               }
+
               let issuer = JSON.parse(JSON.stringify(vc.iss));
-              console.log("VC content valid");
               // 4. verify if subject == wallet connected to the dApp
               if (vc.sub.split(":")[3] != address) {
-                console.log("VC does not belong to the address");
-                console.log(address, vc.sub.split(":")[3]);
                 return false;
               }
-              console.log("Valid subject");
               // 5. verify issuer
               if (issuer !== process.env.VC_ISSUER) {
-                console.log("failed to verify issuer");
-                console.log(issuer, process.env.VC_ISSUER);
                 return false;
               }
-              console.log("Issuer valid");
               // 6. verify VP holder
               if (
                 vp.holder.split(":")[3].toUpperCase() !=
                 vc.sub.split(":")[3].toUpperCase()
               ) {
-                console.log("Vp holder is not the same as VC subject");
                 // 6.1. verify if delegate exists
                 if (
                   vc.credentialSubject.id &&
@@ -440,28 +377,19 @@ export async function verifyVP(
                     vc.credentialSubject.id?.split(":")[3],
                     vp.holder.split(":")[3]
                   ))
-                )
-                  console.log("Valid");
-                else {
-                  console.log("Holder does not have authorization to use VC!");
+                ) {
+                } else {
                   return false;
                 }
               }
-              console.log("Valid VP issuer");
               return true;
             });
           const resolved = await Promise.all(unresolved);
-          console.log(
-            "Finished, VP contains valid VC: ",
-            resolved.includes(true),
-            resolved
-          );
           return resolved.includes(true);
         } else return false;
       } else return res;
     }
   } catch (e) {
-    console.log("Error:", e);
     return false;
   }
 }

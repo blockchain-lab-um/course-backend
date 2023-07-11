@@ -17,7 +17,6 @@ class VCController {
       throw new ErrorHandler(501, "", `Identifier ${id} is not valid!`);
     }
     const res = await issueVC(name, id);
-    //console.log(res);
     if (res === "error") {
       throw new ErrorHandler(501, "", "Server not working properly");
     } else return res;
@@ -32,9 +31,7 @@ class VCController {
     try {
       const res = await verifyVP(vp, domain, challenge, address);
       return res;
-    } catch (e) {
-      console.log("VP err:", e);
-    }
+    } catch (e) {}
   }
 
   generateChallenge() {
