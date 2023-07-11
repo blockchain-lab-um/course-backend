@@ -7,9 +7,9 @@ dotenv.config({
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import MasterRouter from "./routers/MasterRouter";
-import { errorHandler } from "./middleware/error.middleware";
-import { notFoundHandler } from "./middleware/not-found.middleware";
+import MasterRouter from "./routers/MasterRouter.js";
+import { errorHandler } from "./middleware/error.middleware.js";
+import { notFoundHandler } from "./middleware/not-found.middleware.js";
 
 /**
  * Express server application class.
@@ -17,7 +17,7 @@ import { notFoundHandler } from "./middleware/not-found.middleware";
  */
 class Server {
   public app = express();
-  public router = MasterRouter;
+  public router = new MasterRouter().router;
 }
 
 // initialize server app
